@@ -23,6 +23,8 @@ void GameObject::Deserialize(std::istream &is) {
     }
 
     // TODO: Implement this (leave code before this line intact)
+
+
 }
 
 void GameObject::Serialize(std::ostream &os) {
@@ -31,10 +33,31 @@ void GameObject::Serialize(std::ostream &os) {
     }
 
     // TODO: Implement this (leave code before this line intact)
+    
+    //Serialize:
+
+    //position
+    stream_write(os, position);
+    //rotation
+    stream_write(os, rotation);
+    //type
+    stream_write(os, type);
+    //collision_radius
+    stream_write(os, collision_radius);
+
 }
 
 void Bullet::Serialize(std::ostream &os) {
     // TODO: Implement this
+
+    GameObject::Serialize(os);
+
+    //velocity
+    stream_write(os, velocity);
+
+    //team
+    stream_write(os, team);
+
 }
 
 void Bullet::Deserialize(std::istream &is) {
