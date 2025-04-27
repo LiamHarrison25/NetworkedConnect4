@@ -19,6 +19,8 @@ const int CELL_H = 80;
 const int OFFSET_X = 125;
 const int OFFSET_Y = 35;
 
+bool gameOver = false;
+
 void RunGame(Board& board, int& currentPlayer);
 
 int main() {
@@ -43,11 +45,13 @@ int main() {
 
 void RunGame(Board& board, int& currentPlayer)
 {
+    std::string gameMessage = "";
+    int mouseX = GetMouseX();
+
     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
     {
-        int mouseX = GetMouseX();
         int columnClicked = (mouseX - OFFSET_X) / CELL_W;
-        if (columnClicked >= 0 && columnClicked < COLS)
+        if (columnClicked >= 0 && columnClicked < COLS && !gameOver)
         {
             if (board.PlayerMove(columnClicked, currentPlayer))
                 currentPlayer = (currentPlayer == 1) ? 2 : 1;
@@ -58,10 +62,11 @@ void RunGame(Board& board, int& currentPlayer)
         BeginDrawing();
         defer _endDrawing(EndDrawing);
 
-        ClearBackground(RAYWHITE);
+
+        ClearBackground(DARKGREEN);
         DrawFPS(20, 20);
 
-        DrawRectangle(125, 25, 700, 500, BLUE);
+        DrawRectangle(125, 25, 700, 500, DARKBLUE);
 
         for (int row = 0; row < ROWS; row++)
         {
@@ -72,7 +77,7 @@ void RunGame(Board& board, int& currentPlayer)
                 switch (board.GetBoard()[col][row])
                 {
                 case 0:
-                    DrawCircle(centerX, centerY, 30, WHITE);
+                    DrawCircle(centerX, centerY, 30, GRAY);
                     break;
                 case 1:
                     DrawCircle(centerX, centerY, 30, RED);
@@ -84,16 +89,37 @@ void RunGame(Board& board, int& currentPlayer)
             }
         }
 
-        int mouseX = GetMouseX();
+        switch (board.CheckWin())
+        {
+        case 1:
+            gameOver = true;
+            gameMessage = "PLAYER 1 WINS!";
+            break;
+        case 2:
+            gameOver = true;
+            gameMessage = "PLAYER 2 WINS!";
+            break;
+        case 3:
+            gameOver = true;
+            gameMessage = "DRAW :(";
+            break;
+        }
+
+        int textWidth = MeasureText(gameMessage.c_str(), 100);
+        if (!gameMessage.empty())
+        {
+            DrawText(gameMessage.c_str(), (WIDTH - textWidth) / 2, 225, 100, BLACK);
+        }
+
         int hoverCol = (mouseX - OFFSET_X) / CELL_W;
-        if (hoverCol >= 0 && hoverCol < COLS)
+        if (hoverCol >= 0 && hoverCol < COLS && !gameOver)
         {
             int hoverRow = board.GetNextOpenRow(hoverCol);
             if (hoverRow != -1)
             {
                 int centerX = OFFSET_X + hoverCol * CELL_W + CELL_W / 2;
                 int centerY = OFFSET_Y + hoverRow * CELL_H + CELL_H / 2;
-                DrawCircle(centerX, centerY, 30, GRAY);
+                DrawCircle(centerX, centerY, 30, DARKGRAY);
             }
         }
     }
