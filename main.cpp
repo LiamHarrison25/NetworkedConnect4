@@ -5,21 +5,33 @@
 #include <sstream>
 #include "game.h"
 #include "serialization.h"
+#include "GameLogic/board.h"
+
+const int WIDTH = 960;
+const int HEIGHT = 540;
+
+const int ROWS = 6;
+const int COLS = 7;
+
+const int CELL_W = 100;
+const int CELL_H = 80;
+
+const int OFFSET_X = 125;
+const int OFFSET_Y = 35;
+
+void RunGame(Board& board, int& currentPlayer);
 
 int main() {
 
-    InitWindow(640, 480, "ONLINE CONNECT 4");
+    InitWindow(WIDTH, HEIGHT, "ONLINE CONNECT 4");
     SetTargetFPS(60);
+
+    Board board;
+    int currentPlayer = 1;
 
     while (!WindowShouldClose()) {
 
-        {
-            BeginDrawing();
-            defer _endDrawing(EndDrawing);
-
-            ClearBackground(RAYWHITE);
-            DrawFPS(20, 20);
-        }
+        RunGame(board, currentPlayer);
 
         // Undefined destruction order literally because it's easier
         //erase_if(world, [](std::unique_ptr<GameObject>& it) {return destroy_set.contains(it.get());});
@@ -27,4 +39,62 @@ int main() {
         spawn_queue.clear();
     }
     return 0;
+}
+
+void RunGame(Board& board, int& currentPlayer)
+{
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+    {
+        int mouseX = GetMouseX();
+        int columnClicked = (mouseX - OFFSET_X) / CELL_W;
+        if (columnClicked >= 0 && columnClicked < COLS)
+        {
+            if (board.PlayerMove(columnClicked, currentPlayer))
+                currentPlayer = (currentPlayer == 1) ? 2 : 1;
+        }
+    }
+
+    {
+        BeginDrawing();
+        defer _endDrawing(EndDrawing);
+
+        ClearBackground(RAYWHITE);
+        DrawFPS(20, 20);
+
+        DrawRectangle(125, 25, 700, 500, BLUE);
+
+        for (int row = 0; row < ROWS; row++)
+        {
+            for (int col = 0; col < COLS; col++)
+            {
+                int centerX = OFFSET_X + col * CELL_W + CELL_W / 2;
+                int centerY = OFFSET_Y + row * CELL_H + CELL_H / 2;
+                switch (board.GetBoard()[col][row])
+                {
+                case 0:
+                    DrawCircle(centerX, centerY, 30, WHITE);
+                    break;
+                case 1:
+                    DrawCircle(centerX, centerY, 30, RED);
+                    break;
+                case 2:
+                    DrawCircle(centerX, centerY, 30, YELLOW);
+                    break;
+                }
+            }
+        }
+
+        int mouseX = GetMouseX();
+        int hoverCol = (mouseX - OFFSET_X) / CELL_W;
+        if (hoverCol >= 0 && hoverCol < COLS)
+        {
+            int hoverRow = board.GetNextOpenRow(hoverCol);
+            if (hoverRow != -1)
+            {
+                int centerX = OFFSET_X + hoverCol * CELL_W + CELL_W / 2;
+                int centerY = OFFSET_Y + hoverRow * CELL_H + CELL_H / 2;
+                DrawCircle(centerX, centerY, 30, GRAY);
+            }
+        }
+    }
 }

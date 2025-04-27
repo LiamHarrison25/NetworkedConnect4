@@ -8,11 +8,12 @@ public:
 	Board();
 	~Board();
 
-	bool CheckWin();
+	int CheckWin();
 	bool PlayerMove(int col, int player);
+	int GetNextOpenRow(int col) const;
 	int CurrentPlayer() { return playerTurn; }
 	void SetBoard(std::vector<std::vector<int>> netBoard);
-	std::vector<std::vector<int>> GetBoard() { return board; }
+	const std::vector<std::vector<int>>& GetBoard() { return board; }
 
 private:
 	std::vector<std::vector<int>> board;

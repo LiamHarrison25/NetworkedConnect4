@@ -2,8 +2,13 @@
 
 Board::Board()
 {
-	board = std::vector<std::vector<int>>(6, std::vector<int>(7, 0));
+	board = std::vector<std::vector<int>>(7, std::vector<int>(6, 0));
 	playerTurn = 1;
+}
+
+Board::~Board()
+{
+
 }
 
 void Board::SetBoard(std::vector<std::vector<int>> netBoard)
@@ -13,7 +18,7 @@ void Board::SetBoard(std::vector<std::vector<int>> netBoard)
 
 bool Board::PlayerMove(int col, int player)
 {
-	for (int i = 0; i < ROW; i++)
+	for (int i = ROW - 1; i >= 0; i--)
 	{
 		switch (board[col][i])
 		{
@@ -29,9 +34,20 @@ bool Board::PlayerMove(int col, int player)
 	return false;
 }
 
-bool Board::CheckWin() // Returns true if their is a winner/loser or a draw on the board
+int Board::GetNextOpenRow(int col) const
 {
-	bool boardFull = true;
+	for (int row = ROW - 1; row >= 0; row--)
+	{
+		if (board[col][row] == 0)
+			return row;
+	}
+	return -1;
+}
+
+// Returns the player int if there's a win, a three if it's a draw, and zero if the game isn't over
+int Board::CheckWin()
+{
+	int boardFull = 3;
 
 	for (int x = 0; x < COLUMN; x++)
 	{
@@ -42,7 +58,7 @@ bool Board::CheckWin() // Returns true if their is a winner/loser or a draw on t
 			// Checks For Draw
 			if (player == 0)
 			{
-				boardFull = false;
+				boardFull = 0;
 				continue;
 			}
 
@@ -50,28 +66,28 @@ bool Board::CheckWin() // Returns true if their is a winner/loser or a draw on t
 			if (x + 3 < COLUMN && player == board[x + 1][y]
 				&& player == board[x + 2][y] && player == board[x + 3][y])
 			{
-				return true;
+				return player;
 			}
 
 			// Vertical Win
 			if (y + 3 < ROW && player == board[x][y + 1]
 				&& player == board[x][y + 2] && player == board[x][y + 3])
 			{
-				return true;
+				return player;
 			}
 
 			// Check Diagonal Down-Right
 			if (x + 3 < COLUMN && y + 3 < ROW && player == board[x + 1][y + 1]
 				&& player == board[x + 2][y + 2] && board[x + 3][y + 3])
 			{
-				return true;
+				return player;
 			}
 			
 			// Check Diagonal Up-Right
 			if (x + 3 < COLUMN && y - 3 >= 0 && player == board[x + 1][y - 1]
 				&& player == board[x + 2][y - 2] && board[x + 3][y - 3])
 			{
-				return true;
+				return player;
 			}
 		}
 	}
