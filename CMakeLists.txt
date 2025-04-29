@@ -10,7 +10,7 @@ add_executable(NetworkedConnect4 main.cpp
         serialization.h
         serialization.cpp
         endianness.cpp
- "GameLogic/board.h" "GameLogic/board.cpp")
+ "GameLogic/board.h" "GameLogic/board.cpp" "Packets/Packets.cpp" "Packets/Packets.h" "Packets/Packets.cpp" "Networking/Networking.h" "Networking/Networking.cpp")
 
 add_subdirectory(raylib)
 

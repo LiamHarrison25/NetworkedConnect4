@@ -6,6 +6,7 @@
 #include "game.h"
 #include "serialization.h"
 #include "GameLogic/board.h"
+#include "Networking/Networking.h"
 
 const int WIDTH = 960;
 const int HEIGHT = 540;
@@ -25,78 +26,43 @@ bool gameOver = false;
 
 void RunGame(Board& board, int& currentPlayer);
 
-void WriteString(const std::string& data, std::stringstream& stream);
-
-
-std::string create_world_packet(const std::vector<std::unique_ptr<GameObject>>& objects) {
-    // TODO: Implement this
-
-    std::stringstream stream;
-
-    // Get the number of objects in the world
-
-    uint32_t objectCount = objects.size();
-
-    std::string objectCountS = std::to_string(objectCount);
-
-    WriteString(objectCountS, stream);
-
-    // Loop through all the objects
-
-    int i;
-    for (i = 0; i < objectCount; i++)
-    {
-        // The integer type of the object (4 bytes)
-        uint32_t objectType = objects[i].get()->type;
-
-        std::string objectTypeS = std::to_string(objectType);
-
-        WriteString(objectTypeS, stream);
-
-        // The objects serialized data
-
-        std::string objectData = "";
-
-        std::ostringstream dataStream;
-        objects[i].get()->Serialize(dataStream);
-
-        objectData = dataStream.str();
-
-        WriteString(objectData, stream);
-    }
-
-    return stream.str();
-}
-
-void WriteString(const std::string& data, std::stringstream& stream)
+int main(int argc, char* argv[])
 {
-    //Writing the string to binary
-    int i;
-    for (i = 0; i < data.size(); i++)
+    SockLibInit();
+    atexit(SockLibShutdown);
+
+    //TODO: Pick between server and client
+
+    //NOTE: Using arguments for now
+
+    bool isServer = false;
+
+    NetworkedUser* networkedUser = nullptr;
+
+    if (argc > 1)
     {
-        const char* messageChar = &data[i];
-        stream.write(messageChar, sizeof(char));
+        // Run the server
+
+        isServer = true;
+   
+        NetworkedServer* server = new NetworkedServer(localAddress, portNumber);
+
+        server->run_server();
+
+        networkedUser = server;
     }
-}
+    else
+    {
+        // Run the client
 
-void deserialize_packet(const std::string& data) 
-{
-    // TODO: Implement this
+        isServer = false;
 
-    //position
-    //stream_read(is, position);
+        NetworkedClient* client = new NetworkedClient(localAddress, portNumber);
 
-    //rotation
-    //stream_read(is, rotation);
+        //client->run_client();
 
-     //collision_radius
-    //stream_read(is, collision_radius);
-
-    //type
-    //stream_read(is, type);
-}  
-
-int main() {
+        //networkedUser = client;
+    }
 
     InitWindow(WIDTH, HEIGHT, "ONLINE CONNECT 4");
     SetTargetFPS(60);
@@ -104,15 +70,32 @@ int main() {
     Board board;
     int currentPlayer = 1;
 
-    while (!WindowShouldClose()) {
+    while (!WindowShouldClose()) 
+    {
 
         RunGame(board, currentPlayer);
+
+        if (isServer)
+        {
+            networkedUser->RunNetworkedUpdate();
+        }
+        else
+        {
+            //networkedUser->RunNetworkedUpdate();
+        }
 
         // Undefined destruction order literally because it's easier
         //erase_if(world, [](std::unique_ptr<GameObject>& it) {return destroy_set.contains(it.get());});
         destroy_set.clear();
         spawn_queue.clear();
     }
+
+    if (networkedUser != NULL)
+    {
+        delete networkedUser;
+        networkedUser = nullptr;
+    }
+   
     return 0;
 }
 
