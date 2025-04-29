@@ -32,6 +32,11 @@ public:
 		portNumber = port;
 	}
 
+	Socket* GetSocket()
+	{
+		return &socket;
+	}
+
 	virtual void RunNetworkedUpdate();
 
 protected:

@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
         // Run the server
 
         isServer = true;
-   
+
         NetworkedServer* server = new NetworkedServer(localAddress, portNumber);
 
         server->run_server();
@@ -69,26 +69,73 @@ int main(int argc, char* argv[])
 
     Board board;
     int currentPlayer = 1;
+    bool hasConnection = false;
 
-    while (!WindowShouldClose()) 
+    bool isPlaying = true;
+
+    if (isServer) // Run the server loop
     {
-
-        RunGame(board, currentPlayer);
-
-        if (isServer)
+        while (isPlaying)
         {
-            networkedUser->RunNetworkedUpdate();
-        }
-        else
-        {
-            //networkedUser->RunNetworkedUpdate();
-        }
+            Socket connectionTest = networkedUser->GetSocket()->Accept();
 
-        // Undefined destruction order literally because it's easier
-        //erase_if(world, [](std::unique_ptr<GameObject>& it) {return destroy_set.contains(it.get());});
-        destroy_set.clear();
-        spawn_queue.clear();
+            hasConnection = true;
+
+            while (!WindowShouldClose() && hasConnection)
+            {
+                RunGame(board, currentPlayer);
+                   
+                    //networkedUser->RunNetworkedUpdate();
+                    //Run Server update
+                    try
+                    {
+                        //std::string message = recieve(connection);
+
+                        //connection.Send(message.data(), message.size());
+                    }
+                    catch (connectionDisconnect& e)
+                    {
+                        hasConnection = false;
+                        std::cout << "The connection was closed" << std::endl;
+                    }
+                    catch (connectionTimeout& e)
+                    {
+                        hasConnection = false;
+                    }
+
+                // Undefined destruction order literally because it's easier
+                //erase_if(world, [](std::unique_ptr<GameObject>& it) {return destroy_set.contains(it.get());});
+                destroy_set.clear();
+                spawn_queue.clear();
+            }
+        }
     }
+    else //Run the client loop
+    {
+        while (isPlaying)
+        {
+            while (!WindowShouldClose())
+            {
+                RunGame(board, currentPlayer);
+
+                // Run server and client updates:
+                
+                // Run Client update
+
+                //networkedUser->RunNetworkedUpdate();
+
+                // Undefined destruction order literally because it's easier
+                //erase_if(world, [](std::unique_ptr<GameObject>& it) {return destroy_set.contains(it.get());});
+                destroy_set.clear();
+                spawn_queue.clear();
+            }
+
+            if (WindowShouldClose())
+            {
+                isPlaying = false;
+            }
+        }
+    }    
 
     if (networkedUser != NULL)
     {

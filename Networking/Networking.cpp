@@ -42,40 +42,41 @@ std::string NetworkedServer::recieve(Socket& sock, size_t size)
 
 void NetworkedServer::CheckForInput()
 {
-	if (!hasConnection)
-	{
-		try
-		{
-			connection.Accept();
-		}
-		catch (std::runtime_error)
-		{
-			std::cout << "Could not connect" << std::endl;
-		}
+	//if (!hasConnection)
+	//{
+	//	try
+	//	{
+	//		Socket connectionTest = socket.Accept();
+	//		connection = connectionTest; //= socket.Accept();
+	//	}
+	//	catch (std::runtime_error)
+	//	{
+	//		std::cout << "Could not connect" << std::endl;
+	//	}
 
-		std::cout << "Connection established" << std::endl;
+	//	std::cout << "Connection established" << std::endl;
 
-		hasConnection = true;
-	}
+	//	hasConnection = true;
+	//}
 
-	if (hasConnection)
-	{
-		try
-		{
-			std::string message = recieve(connection);
+	//if (hasConnection)
+	//{
+	//	try
+	//	{
+	//		std::string message = recieve(connection);
 
-			connection.Send(message.data(), message.size());
-		}
-		catch (connectionDisconnect& e)
-		{
-			hasConnection = false;
-			std::cout << "The connection was closed" << std::endl;
-		}
-		catch (connectionTimeout& e)
-		{
-			hasConnection = false;
-		}
-	}	
+	//		connection.Send(message.data(), message.size());
+	//	}
+	//	catch (connectionDisconnect& e)
+	//	{
+	//		hasConnection = false;
+	//		std::cout << "The connection was closed" << std::endl;
+	//	}
+	//	catch (connectionTimeout& e)
+	//	{
+	//		hasConnection = false;
+	//	}
+	//}	
 }
 
 void NetworkedServer::RunNetworkedUpdate()
@@ -92,6 +93,7 @@ void NetworkedClient::run_client()
 	try
 	{
 		socket.Connect(Address(hostName, portNumber));
+		socket.SetNonBlockingMode(true);
 	}
 	catch (std::runtime_error)
 	{
