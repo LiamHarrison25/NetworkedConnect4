@@ -20,7 +20,6 @@ public:
 private:
 	std::vector<std::vector<int>> board;
 	std::vector<Piece> pieces;
-	int playerTurn;
 	const int COLUMN = 7;
 	const int ROW = 6;
 };

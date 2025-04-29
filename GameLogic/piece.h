@@ -3,7 +3,7 @@
 #include <iostream>
 #include "../game.h"
 
-class Piece {
+class Piece : public GameObject{
 public:
 	Piece();
 	~Piece();
