@@ -126,8 +126,13 @@ void RunGame(Board& board, int& currentPlayer)
         int columnClicked = (mouseX - OFFSET_X) / CELL_W;
         if (columnClicked >= 0 && columnClicked < COLS && !gameOver)
         {
-            if (board.PlayerMove(columnClicked, currentPlayer))
+            Piece piece;
+            piece.PlacePiece(columnClicked, currentPlayer);
+            if (board.PlayerMove(piece))
+            {
+                board.AddPiece(piece);
                 currentPlayer = (currentPlayer == 1) ? 2 : 1;
+            }
         }
     }
 
@@ -194,6 +199,14 @@ void RunGame(Board& board, int& currentPlayer)
                 int centerY = OFFSET_Y + hoverRow * CELL_H + CELL_H / 2;
                 DrawCircle(centerX, centerY, 30, DARKGRAY);
             }
+        }
+
+        if (gameOver && IsKeyDown(KEY_R))
+        {
+            gameOver = false;
+            board.ResetGame();
+            currentPlayer = 1;
+            gameMessage = "";
         }
     }
 }

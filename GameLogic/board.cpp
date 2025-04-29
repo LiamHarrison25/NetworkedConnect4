@@ -3,7 +3,6 @@
 Board::Board()
 {
 	board = std::vector<std::vector<int>>(7, std::vector<int>(6, 0));
-	playerTurn = 1;
 }
 
 Board::~Board()
@@ -11,19 +10,30 @@ Board::~Board()
 
 }
 
-void Board::SetBoard(std::vector<std::vector<int>> netBoard)
+void Board::ResetGame()
 {
-	board = netBoard;
+	board = std::vector<std::vector<int>>(7, std::vector<int>(6, 0));
+	pieces.clear();
 }
 
-bool Board::PlayerMove(int col, int player)
+void Board::SetBoard()
+{
+	board = std::vector<std::vector<int>>(7, std::vector<int>(6, 0));
+
+	for (int i = 0; i < pieces.size(); i++)
+	{
+		PlayerMove(pieces[i]);
+	}
+}
+
+bool Board::PlayerMove(Piece& piece)
 {
 	for (int i = ROW - 1; i >= 0; i--)
 	{
-		switch (board[col][i])
+		switch (board[piece.GetColumn()][i])
 		{
 		case 0:
-			board[col][i] = player;
+			board[piece.GetColumn()][i] = piece.GetColor();
 			return true;
 		case 1:
 			break;
@@ -78,14 +88,14 @@ int Board::CheckWin()
 
 			// Check Diagonal Down-Right
 			if (x + 3 < COLUMN && y + 3 < ROW && player == board[x + 1][y + 1]
-				&& player == board[x + 2][y + 2] && board[x + 3][y + 3])
+				&& player == board[x + 2][y + 2] && player == board[x + 3][y + 3])
 			{
 				return player;
 			}
 			
 			// Check Diagonal Up-Right
 			if (x + 3 < COLUMN && y - 3 >= 0 && player == board[x + 1][y - 1]
-				&& player == board[x + 2][y - 2] && board[x + 3][y - 3])
+				&& player == board[x + 2][y - 2] && player == board[x + 3][y - 3])
 			{
 				return player;
 			}
