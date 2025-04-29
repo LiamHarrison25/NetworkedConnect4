@@ -43,8 +43,8 @@ public:
     virtual void Update() {}
     virtual void Render() {}
     virtual void OnCollide(GameObject* other) {}
-    virtual void Serialize(std::ostream& os);
-    virtual void Deserialize(std::istream& is);
+    virtual void Serialize(std::ostream& os) {};
+    virtual void Deserialize(std::istream& is) {};
     virtual ~GameObject() = default;
 
     [[nodiscard]] Vector2 Up() const {
