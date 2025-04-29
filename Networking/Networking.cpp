@@ -44,7 +44,14 @@ void NetworkedServer::CheckForInput()
 {
 	if (!hasConnection)
 	{
-		connection.Accept();
+		try
+		{
+			connection.Accept();
+		}
+		catch (std::runtime_error)
+		{
+			std::cout << "Could not connect" << std::endl;
+		}
 
 		std::cout << "Connection established" << std::endl;
 
