@@ -5,9 +5,16 @@
 #include <sstream>
 #include "game.h"
 #include "serialization.h"
+#include "GameLogic/board.h"
 
-void WriteString(const std::string& data, std::stringstream& stream);
+const int WIDTH = 960;
+const int HEIGHT = 540;
 
+const int ROWS = 6;
+const int COLS = 7;
+
+const int CELL_W = 100;
+const int CELL_H = 80;
 std::string create_world_packet(const std::vector<std::unique_ptr<GameObject>>& objects) {
     // TODO: Implement this
 
@@ -48,6 +55,8 @@ std::string create_world_packet(const std::vector<std::unique_ptr<GameObject>>& 
     return stream.str();
 }
 
+const int OFFSET_X = 125;
+const int OFFSET_Y = 35;
 void WriteString(const std::string& data, std::stringstream& stream)
 {
     //Writing the string to binary
@@ -63,11 +72,9 @@ void deserialize_packet(const std::string& data) {
     // TODO: Implement this
 }
 
-void GameObject::Deserialize(std::istream &is) {
-    if (!should_serialize) {
-        throw std::runtime_error("GameObject::Deserialize called on non-serializable object type");
-    }
+bool gameOver = false;
 
+void RunGame(Board& board, int& currentPlayer);
     // TODO: Implement this (leave code before this line intact)
 
     //position
@@ -84,172 +91,104 @@ void GameObject::Deserialize(std::istream &is) {
     
 }
 
-void GameObject::Serialize(std::ostream &os) {
-    if (!should_serialize) {
-        throw std::runtime_error("GameObject::Serialize called on non-serializable object type");
-    }
+int main() {
 
-    // TODO: Implement this (leave code before this line intact)
-
-    //position
-    stream_write(os, position);
-    //rotation
-    stream_write(os, rotation);
-
-    //collision_radius
-    stream_write(os, collision_radius);
-
-    //type
-    //stream_write(os, type);
-    
-
-}
-
-void Bullet::Serialize(std::ostream &os) {
-    // TODO: Implement this
-
-    GameObject::Serialize(os);
-
-    //team
-    stream_write(os, team);
-
-    //velocity
-    stream_write(os, velocity);    
-
-}
-
-void Bullet::Deserialize(std::istream &is) {
-    // TODO: Implement this
-
-    GameObject::Deserialize(is);
-
-    stream_read(is, team);
-
-    stream_read(is, velocity);
-
-}
-
-void Player::Serialize(std::ostream &os) {
-    // TODO: Implement this
-
-    GameObject::Serialize(os);
-
-    // team
-    stream_write(os, team);
-
-    // health
-    stream_write(os, health);
-
-    // spawn_point
-    stream_write(os, spawn_point);
-
-    // velocity
-    stream_write(os, velocity);
-
-    // frame_thrust
-    //stream_write(os, frame_thrust);
-
-    // is_net_controlled
-    //stream_write(os, is_net_controlled);
-}
-
-void Player::Deserialize(std::istream &is) {
-    // TODO: Implement this
-
-    //stream_read(is, is_net_controlled);
-
-    //stream_read(is, frame_thrust);
-
-    GameObject::Deserialize(is);
-
-    stream_read(is, team);
-
-    stream_read(is, health);
-
-    stream_read(is, spawn_point);
-
-    stream_read(is, velocity);
-
-}
-
-void Explosion::Serialize(std::ostream &os) {
-    // TODO: Implement this
-
-    GameObject::Serialize(os);
-
-    // alive_time
-    stream_write(os, alive_time);
-
-    // color
-    stream_write(os, color);
-
-}
-
-void Explosion::Deserialize(std::istream &is) {
-    // TODO: Implement this
-
-    GameObject::Deserialize(is);
-
-    //alive_time
-    stream_read(is, alive_time);
-
-    // color
-    stream_read(is, color);
-}
-
-int run_all_tests();
-void print_test_solution();
-
-int main(int argc, char* argv[]) {
-    //if (argc > 1)
-    //{
-        return run_all_tests();
-    //}
-
-    InitWindow(640, 480, "Object State Replication");
+    InitWindow(WIDTH, HEIGHT, "ONLINE CONNECT 4");
     SetTargetFPS(60);
 
-    GameObject::Spawn<Player>(1);
-    GameObject::Spawn<Player>(2, true);
+    Board board;
+    int currentPlayer = 1;
 
     while (!WindowShouldClose()) {
-        for (auto & it : world) {
-            it->Update();
-        }
 
-        for (int i = 0; i < world.size()-1; i++) {
-            for (int j = i+1; j < world.size(); j++) {
-                auto& a = world[i];
-                auto& b = world[j];
-                if (a->collision_radius > 0 && b->collision_radius > 0) {
-                    if (CheckCollisionCircles(a->position, a->collision_radius, b->position, b->collision_radius)) {
-                        a->OnCollide(b.get());
-                        b->OnCollide(a.get());
-                    }
+        RunGame(board, currentPlayer);
+
+        // Undefined destruction order literally because it's easier
+        //erase_if(world, [](std::unique_ptr<GameObject>& it) {return destroy_set.contains(it.get());});
+        destroy_set.clear();
+        spawn_queue.clear();
+    }
+    return 0;
+}
+
+void RunGame(Board& board, int& currentPlayer)
+{
+    std::string gameMessage = "";
+    int mouseX = GetMouseX();
+
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+    {
+        int columnClicked = (mouseX - OFFSET_X) / CELL_W;
+        if (columnClicked >= 0 && columnClicked < COLS && !gameOver)
+        {
+            if (board.PlayerMove(columnClicked, currentPlayer))
+                currentPlayer = (currentPlayer == 1) ? 2 : 1;
+        }
+    }
+
+    {
+        BeginDrawing();
+        defer _endDrawing(EndDrawing);
+
+
+        ClearBackground(DARKGREEN);
+        DrawFPS(20, 20);
+
+        DrawRectangle(125, 25, 700, 500, DARKBLUE);
+
+        for (int row = 0; row < ROWS; row++)
+        {
+            for (int col = 0; col < COLS; col++)
+            {
+                int centerX = OFFSET_X + col * CELL_W + CELL_W / 2;
+                int centerY = OFFSET_Y + row * CELL_H + CELL_H / 2;
+                switch (board.GetBoard()[col][row])
+                {
+                case 0:
+                    DrawCircle(centerX, centerY, 30, GRAY);
+                    break;
+                case 1:
+                    DrawCircle(centerX, centerY, 30, RED);
+                    break;
+                case 2:
+                    DrawCircle(centerX, centerY, 30, YELLOW);
+                    break;
                 }
             }
         }
 
+        switch (board.CheckWin())
         {
-            BeginDrawing();
-            defer _endDrawing(EndDrawing);
+        case 1:
+            gameOver = true;
+            gameMessage = "PLAYER 1 WINS!";
+            break;
+        case 2:
+            gameOver = true;
+            gameMessage = "PLAYER 2 WINS!";
+            break;
+        case 3:
+            gameOver = true;
+            gameMessage = "DRAW :(";
+            break;
+        }
 
-            ClearBackground(RAYWHITE);
-            for (const auto & it : world) {
-                it->Render();
+        int textWidth = MeasureText(gameMessage.c_str(), 100);
+        if (!gameMessage.empty())
+        {
+            DrawText(gameMessage.c_str(), (WIDTH - textWidth) / 2, 225, 100, BLACK);
+        }
+
+        int hoverCol = (mouseX - OFFSET_X) / CELL_W;
+        if (hoverCol >= 0 && hoverCol < COLS && !gameOver)
+        {
+            int hoverRow = board.GetNextOpenRow(hoverCol);
+            if (hoverRow != -1)
+            {
+                int centerX = OFFSET_X + hoverCol * CELL_W + CELL_W / 2;
+                int centerY = OFFSET_Y + hoverRow * CELL_H + CELL_H / 2;
+                DrawCircle(centerX, centerY, 30, DARKGRAY);
             }
-            DrawText(("Live Objects: " + std::to_string(world.size())).c_str(), 20, 50, 20, DARKGRAY);
-            DrawFPS(20, 20);
         }
-
-        // Undefined destruction order literally because it's easier
-        erase_if(world, [](std::unique_ptr<GameObject>& it) {return destroy_set.contains(it.get());});
-        destroy_set.clear();
-
-        for (auto& it : spawn_queue) {
-            world.push_back(std::move(it));
-        }
-        spawn_queue.clear();
     }
-    return 0;
 }

@@ -4,13 +4,13 @@ project(NetworkedConnect4)
 set(CMAKE_CXX_STANDARD 20)
 
 add_executable(NetworkedConnect4 main.cpp
-        tests.cpp
+        
         game.h
         game.cpp
         serialization.h
         serialization.cpp
         endianness.cpp
-)
+ "GameLogic/board.h" "GameLogic/board.cpp")
 
 add_subdirectory(raylib)
 
