@@ -15,6 +15,19 @@ const int COLS = 7;
 
 const int CELL_W = 100;
 const int CELL_H = 80;
+
+const int OFFSET_X = 125;
+const int OFFSET_Y = 35;
+
+bool gameOver = false;
+
+//Forward declarations:
+
+void RunGame(Board& board, int& currentPlayer);
+
+void WriteString(const std::string& data, std::stringstream& stream);
+
+
 std::string create_world_packet(const std::vector<std::unique_ptr<GameObject>>& objects) {
     // TODO: Implement this
 
@@ -55,8 +68,6 @@ std::string create_world_packet(const std::vector<std::unique_ptr<GameObject>>& 
     return stream.str();
 }
 
-const int OFFSET_X = 125;
-const int OFFSET_Y = 35;
 void WriteString(const std::string& data, std::stringstream& stream)
 {
     //Writing the string to binary
@@ -68,28 +79,22 @@ void WriteString(const std::string& data, std::stringstream& stream)
     }
 }
 
-void deserialize_packet(const std::string& data) {
+void deserialize_packet(const std::string& data) 
+{
     // TODO: Implement this
-}
-
-bool gameOver = false;
-
-void RunGame(Board& board, int& currentPlayer);
-    // TODO: Implement this (leave code before this line intact)
 
     //position
-    stream_read(is, position);
+    //stream_read(is, position);
 
     //rotation
-    stream_read(is, rotation);
+    //stream_read(is, rotation);
 
      //collision_radius
-    stream_read(is, collision_radius);
+    //stream_read(is, collision_radius);
 
     //type
     //stream_read(is, type);
-    
-}
+}  
 
 int main() {
 
