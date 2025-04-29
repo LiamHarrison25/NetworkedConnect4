@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
 
         //client->run_client();
 
-        //networkedUser = client;
+        networkedUser = client;
     }
 
     InitWindow(WIDTH, HEIGHT, "ONLINE CONNECT 4");
@@ -77,11 +77,11 @@ int main(int argc, char* argv[])
     {
         while (isPlaying)
         {
-            Socket connectionTest = networkedUser->GetSocket()->Accept();
+            Socket connection = networkedUser->GetSocket()->Accept();
 
             hasConnection = true;
 
-            while (!WindowShouldClose() && hasConnection)
+            while (!WindowShouldClose() || hasConnection)
             {
                 RunGame(board, currentPlayer);
                    
