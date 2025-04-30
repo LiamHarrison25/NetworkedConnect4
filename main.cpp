@@ -133,7 +133,7 @@ int main(int argc, char* argv[])
                     }
 
                 // Undefined destruction order literally because it's easier
-                //erase_if(world, [](std::unique_ptr<GameObject>& it) {return destroy_set.contains(it.get());});
+                erase_if(world, [](std::unique_ptr<GameObject>& it) {return destroy_set.contains(it.get());});
                 destroy_set.clear();
                 spawn_queue.clear();
             }

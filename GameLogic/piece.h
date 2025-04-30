@@ -12,6 +12,9 @@ public:
 	const int GetColumn() { return piece.first; }
 	const int GetColor() { return piece.second; }
 
+	void Deserialize(std::istream& is);
+	void Serialize(std::ostream& os);
+
 private:
 	std::pair<int, int> piece;
 };
