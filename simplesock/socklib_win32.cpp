@@ -163,7 +163,7 @@ Socket Socket::Accept() {
 
 void Socket::AcceptInto(Socket& conn_socket) {
     SOCKET connection = accept(to_native_socket(*this), NULL, NULL);
-    //require(connection != INVALID_SOCKET, "accept()");
+    require(connection != INVALID_SOCKET, "accept()");
 
     conn_socket.Create(Socket::Family::INET, Socket::Type::STREAM);
     Win32Socket sock = { 0 };

@@ -16,8 +16,6 @@ void NetworkedServer::run_server()
 
 	socket.Bind(Address(hostName, portNumber));
 
-	socket.SetNonBlockingMode(true);
-
 	socket.Listen();
 }
 
@@ -115,9 +113,9 @@ std::string NetworkedClient::SendMessage(std::stringstream& stream)
 	{
 		buffer[bytesRecieved] = '\0';
 		std::cout << std::endl << buffer << std::endl;
-	}
 
-	buffer.resize(bytesRecieved);
+		buffer.resize(bytesRecieved);
+	}
 
 	return buffer;
 }

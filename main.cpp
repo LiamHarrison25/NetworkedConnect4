@@ -72,22 +72,16 @@ int main(int argc, char* argv[])
         NetworkedServer* server = new NetworkedServer(localAddress, portNumber);
 
         serverUser.run_server();
+    }
+    else
+    {
+        // Run the client
 
         isServer = false;
 
         NetworkedClient* client = new NetworkedClient(localAddress, portNumber);
 
         clientUser.run_client();
-    }
-    else
-    {
-        // Run the client
-
-        isServer = true;
-
-        NetworkedServer* server = new NetworkedServer(localAddress, portNumber);
-
-        serverUser.run_server();
     }
 
     InitWindow(WIDTH, HEIGHT, "ONLINE CONNECT 4");
@@ -104,6 +98,8 @@ int main(int argc, char* argv[])
         while (isPlaying)
         {
             Socket connection = serverUser.GetSocket()->Accept();
+
+            connection.SetNonBlockingMode(true);
 
             hasConnection = true;
 
