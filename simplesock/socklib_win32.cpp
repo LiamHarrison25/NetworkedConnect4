@@ -194,7 +194,7 @@ int Socket::Recv(char *buffer, int size) {
     }
   }
   // Crash on all other errors
-  //require(len >= 0, "recv()");
+  require(len >= 0, "recv()");
 
   return len;
 }
