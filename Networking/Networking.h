@@ -7,7 +7,7 @@
 #include <iostream>
 #include <sstream>
 
-const int portNumber = 69;
+const int portNumber = 10346;
 const char* const localAddress = "127.0.0.1";
 
 class connectionDisconnect : public std::runtime_error
@@ -76,9 +76,9 @@ public:
 	void RunNetworkedUpdate();
 
 	void run_client();
+	std::string SendMessage(std::stringstream& stream);
 
 private:
 
-	std::string SendMessage(std::stringstream& stream);
 
 };

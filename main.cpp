@@ -26,6 +26,29 @@ bool gameOver = false;
 
 void RunGame(Board& board, int& currentPlayer);
 
+std::string recieve(Socket& sock, size_t size)
+{
+    std::string buffer(size, '\0');
+
+    int numBytesRecieved = sock.Recv(buffer.data(), buffer.size());
+
+    if (numBytesRecieved < 0)
+    {
+        std::cout << "Timed Out" << std::endl;
+        throw connectionTimeout();
+    }
+    else if (numBytesRecieved == 0)
+    {
+        std::cout << "Connection Over" << std::endl;
+        throw connectionDisconnect();
+    }
+
+    std::cout << "Recieved Message!" << std::endl;
+
+    buffer.resize(numBytesRecieved);
+    return buffer;
+}
+
 int main(int argc, char* argv[])
 {
     SockLibInit();
@@ -37,7 +60,8 @@ int main(int argc, char* argv[])
 
     bool isServer = false;
 
-    NetworkedUser* networkedUser = nullptr;
+    NetworkedServer serverUser(localAddress, portNumber);
+    NetworkedClient clientUser(localAddress, portNumber);
 
     if (argc > 1)
     {
@@ -47,9 +71,7 @@ int main(int argc, char* argv[])
 
         NetworkedServer* server = new NetworkedServer(localAddress, portNumber);
 
-        server->run_server();
-
-        networkedUser = server;
+        serverUser.run_server();
     }
     else
     {
@@ -59,9 +81,7 @@ int main(int argc, char* argv[])
 
         NetworkedClient* client = new NetworkedClient(localAddress, portNumber);
 
-        //client->run_client();
-
-        networkedUser = client;
+        clientUser.run_client();
     }
 
     InitWindow(WIDTH, HEIGHT, "ONLINE CONNECT 4");
@@ -77,7 +97,9 @@ int main(int argc, char* argv[])
     {
         while (isPlaying)
         {
-            Socket connection = networkedUser->GetSocket()->Accept();
+            Socket connection = serverUser.GetSocket()->Accept();
+
+            connection.SetNonBlockingMode(true);
 
             hasConnection = true;
 
@@ -89,9 +111,16 @@ int main(int argc, char* argv[])
                     //Run Server update
                     try
                     {
-                        //std::string message = recieve(connection);
+                        if (connection._has_socket)
+                        {
+                            std::string message = recieve(connection, 4096);
 
-                        //connection.Send(message.data(), message.size());
+                            connection.Send(message.data(), message.size());
+                        }
+                        else
+                        {
+                            throw std::runtime_error("Broken");
+                        }
                     }
                     catch (connectionDisconnect& e)
                     {
@@ -114,6 +143,8 @@ int main(int argc, char* argv[])
     {
         while (isPlaying)
         {
+            
+
             while (!WindowShouldClose())
             {
                 RunGame(board, currentPlayer);
@@ -123,6 +154,10 @@ int main(int argc, char* argv[])
                 // Run Client update
 
                 //networkedUser->RunNetworkedUpdate();
+
+                std::stringstream msg("Hello World!");
+
+                clientUser.SendMessage(msg);
 
                 // Undefined destruction order literally because it's easier
                 //erase_if(world, [](std::unique_ptr<GameObject>& it) {return destroy_set.contains(it.get());});
@@ -137,11 +172,11 @@ int main(int argc, char* argv[])
         }
     }    
 
-    if (networkedUser != NULL)
+    /*if (networkedUser != NULL)
     {
         delete networkedUser;
         networkedUser = nullptr;
-    }
+    }*/
    
     return 0;
 }
