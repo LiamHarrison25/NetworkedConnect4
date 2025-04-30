@@ -110,9 +110,14 @@ std::string NetworkedClient::SendMessage(std::stringstream& stream)
 	std::string buffer(4096, '\0');
 
 	int bytesRecieved = socket.Recv(buffer.data(), buffer.size());
-	buffer.resize(bytesRecieved);
 
-	std::cout << std::endl << buffer << std::endl;
+	if (bytesRecieved > 0)
+	{
+		buffer[bytesRecieved] = '\0';
+		std::cout << std::endl << buffer << std::endl;
+	}
+
+	buffer.resize(bytesRecieved);
 
 	return buffer;
 }
