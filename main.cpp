@@ -24,6 +24,27 @@ bool gameOver = false;
 
 //Forward declarations:
 
+//TEMP:
+
+std::string recieve(Socket& sock, size_t size = 4096)
+{
+    std::string buffer(size, '\0');
+
+    int numBytesRecieved = sock.Recv(buffer.data(), buffer.size());
+
+    if (numBytesRecieved < 0)
+    {
+        throw connectionTimeout();
+    }
+    else if (numBytesRecieved == 0)
+    {
+        throw connectionDisconnect();
+    }
+
+    buffer.resize(numBytesRecieved);
+    return buffer;
+}
+
 void RunGame(Board& board, int& currentPlayer);
 
 int main(int argc, char* argv[])
@@ -37,9 +58,11 @@ int main(int argc, char* argv[])
 
     bool isServer = false;
 
-    NetworkedUser* networkedUser = nullptr;
+    //NetworkedUser* networkedUser = nullptr;
+    NetworkedServer* networkedServer = nullptr;
+    NetworkedClient* networkedClient = nullptr;
 
-    if (argc > 1)
+    if (true) //argc > 1
     {
         // Run the server
 
@@ -49,7 +72,7 @@ int main(int argc, char* argv[])
 
         server->run_server();
 
-        networkedUser = server;
+        networkedServer = server;
     }
     else
     {
@@ -61,7 +84,7 @@ int main(int argc, char* argv[])
 
         //client->run_client();
 
-        networkedUser = client;
+        networkedClient = client;
     }
 
     InitWindow(WIDTH, HEIGHT, "ONLINE CONNECT 4");
@@ -77,7 +100,7 @@ int main(int argc, char* argv[])
     {
         while (isPlaying)
         {
-            Socket connection = networkedUser->GetSocket()->Accept();
+            Socket connection = networkedServer->GetSocket()->Accept(); //networkedUser->GetSocket()->Accept();
 
             hasConnection = true;
 
@@ -91,6 +114,8 @@ int main(int argc, char* argv[])
                     {
                         //std::string message = recieve(connection);
 
+                        //std::string testMessage = "HELLO!";
+
                         //connection.Send(message.data(), message.size());
                     }
                     catch (connectionDisconnect& e)
@@ -100,6 +125,8 @@ int main(int argc, char* argv[])
                     }
                     catch (connectionTimeout& e)
                     {
+                        std::cout << "Connection Timeout" << std::endl;
+
                         hasConnection = false;
                     }
 
@@ -118,11 +145,12 @@ int main(int argc, char* argv[])
             {
                 RunGame(board, currentPlayer);
 
-                // Run server and client updates:
                 
                 // Run Client update
 
                 //networkedUser->RunNetworkedUpdate();
+                
+
 
                 // Undefined destruction order literally because it's easier
                 //erase_if(world, [](std::unique_ptr<GameObject>& it) {return destroy_set.contains(it.get());});
@@ -137,10 +165,22 @@ int main(int argc, char* argv[])
         }
     }    
 
-    if (networkedUser != NULL)
+    /*if (networkedUser != NULL)
     {
         delete networkedUser;
         networkedUser = nullptr;
+    }*/
+
+    if (networkedClient != NULL)
+    {
+        delete networkedClient;
+        networkedClient = nullptr;
+    }
+
+    if (networkedServer != NULL)
+    {
+        delete networkedServer;
+        networkedServer = nullptr;
     }
    
     return 0;

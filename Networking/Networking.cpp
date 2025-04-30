@@ -120,6 +120,16 @@ std::string NetworkedClient::SendMessage(std::stringstream& stream)
 void NetworkedClient::RunNetworkedUpdate()
 {
 	//Send Message
+	std::string message = "HELLO!";
+
+	std::stringstream stream(message);
+	SendMessage(stream);
+
+	char* recvMessage;
+
+	socket.Recv(recvMessage, 4098);
+
+	std::cout << recvMessage << std::endl;
 }
 
 
