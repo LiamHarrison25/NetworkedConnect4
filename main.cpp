@@ -24,7 +24,7 @@ bool gameOver = false;
 
 //Forward declarations:
 
-void RunGame(Board& board, int& currentPlayer, NetworkedUser* user, bool isServer);
+void RunGame(Board& board, int& currentPlayer, NetworkedUser* server, NetworkedUser* client, bool isServer);
 
 std::string recieve(Socket& sock, size_t size)
 {
@@ -63,6 +63,7 @@ int main(int argc, char* argv[])
     //NetworkedServer serverUser(localAddress, portNumber);
     //NetworkedClient clientUser(localAddress, portNumber);
 	NetworkedUser* networkedUser = nullptr;
+	NetworkedUser* testNetwork = nullptr;
 
     if (argc > 1)
     {
@@ -87,6 +88,10 @@ int main(int argc, char* argv[])
         networkedUser->RunUser();
 
         networkedUser->SetSocket2(networkedUser->GetSocket());
+
+        testNetwork = new NetworkedServer(localAddress, 9000);
+
+        testNetwork->RunUser();
     }
 
     InitWindow(WIDTH, HEIGHT, "ONLINE CONNECT 4");
@@ -109,10 +114,15 @@ int main(int argc, char* argv[])
 
             hasConnection = true;
 
+            testNetwork = new NetworkedClient(localAddress, 9000);
+            testNetwork->RunUser();
+
+            testNetwork->SetSocket2(testNetwork->GetSocket());
+
             while (!WindowShouldClose() || hasConnection)
             {
                 int currentPlayer = 1;
-                RunGame(board, currentPlayer, networkedUser, isServer);
+                RunGame(board, currentPlayer, networkedUser, testNetwork, isServer);
                    
                     //networkedUser->RunNetworkedUpdate();
                     //Run Server update
@@ -150,12 +160,16 @@ int main(int argc, char* argv[])
     {
         while (isPlaying)
         {
-            
+            Socket connection = testNetwork->GetSocket()->Accept();
+
+            testNetwork->SetSocket2(&connection);
+
+            connection.SetNonBlockingMode(true);
 
             while (!WindowShouldClose())
             {
                 int currentPlayer = 2;
-                RunGame(board, currentPlayer, networkedUser, isServer);
+                RunGame(board, currentPlayer, testNetwork, networkedUser, isServer);
 
                 // Run server and client updates:
                 
@@ -193,11 +207,10 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-void RunGame(Board& board, int& currentPlayer, NetworkedUser* user, bool isServer)
+void RunGame(Board& board, int& currentPlayer, NetworkedUser* server, NetworkedUser* client, bool isServer)
 {
     std::string gameMessage = "";
     int mouseX = GetMouseX();
-    bool madeMove = false;
 
     int playerID = isServer ? 1 : 2;
 
@@ -213,36 +226,32 @@ void RunGame(Board& board, int& currentPlayer, NetworkedUser* user, bool isServe
                 board.AddPiece(piece);
                 std::stringstream stream;
                 piece.Serialize(stream);
-				user->SendMessage(stream, user->GetSocket2());
+				server->SendMessage(stream, server->GetSocket2());
                 currentPlayer = (currentPlayer == 1) ? 2 : 1;
-                madeMove = true;
             }
         }
     }
 
     // Recieve input
 
-    if (!madeMove)
+    try
     {
-        try
-        {
-            std::string output = user->RecieveMessage(*user->GetSocket2(), 4096);
+        std::string output = client->RecieveMessage(*client->GetSocket2(), 4096);
 
-            std::stringstream stream(output);
+        std::stringstream stream(output);
 
-            Piece piece;
-            piece.Deserialize(stream);
-            board.AddPiece(piece);
-            board.PlayerMove(piece);
-        }
-        catch (connectionDisconnect& e)
-        {
-            std::cout << "The connection was closed";
-        }
-        catch (connectionTimeout& e)
-        {
-            std::cout << "The connection timed out";
-        }
+        Piece piece;
+        piece.Deserialize(stream);
+        board.AddPiece(piece);
+        board.PlayerMove(piece);
+    }
+    catch (connectionDisconnect& e)
+    {
+        std::cout << "The connection was closed";
+    }
+    catch (connectionTimeout& e)
+    {
+        std::cout << "The connection timed out";
     }
 
     {
