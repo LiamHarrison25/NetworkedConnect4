@@ -11,3 +11,8 @@
 	./NetworkedConnect4.exe
 	or
 	Run the game from the IDE normally
+
+## TIPS:
+
+Press the r key to reset the game
+

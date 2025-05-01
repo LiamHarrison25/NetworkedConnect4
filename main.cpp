@@ -26,29 +26,6 @@ bool gameOver = false;
 
 void RunGame(Board& board, int& currentPlayer, NetworkedUser* server, NetworkedUser* client, bool isServer);
 
-std::string recieve(Socket& sock, size_t size)
-{
-    std::string buffer(size, '\0');
-
-    int numBytesRecieved = sock.Recv(buffer.data(), buffer.size());
-
-    if (numBytesRecieved < 0)
-    {
-        std::cout << "Timed Out" << std::endl;
-        throw connectionTimeout();
-    }
-    else if (numBytesRecieved == 0)
-    {
-        std::cout << "Connection Over" << std::endl;
-        throw connectionDisconnect();
-    }
-
-    std::cout << "Recieved Message!" << std::endl;
-
-    buffer.resize(numBytesRecieved);
-    return buffer;
-}
-
 int main(int argc, char* argv[])
 {
     SockLibInit();
@@ -60,38 +37,31 @@ int main(int argc, char* argv[])
 
     bool isServer = false;
 
-    //NetworkedServer serverUser(localAddress, portNumber);
-    //NetworkedClient clientUser(localAddress, portNumber);
+    // Network users
 	NetworkedUser* networkedUser = nullptr;
-	NetworkedUser* testNetwork = nullptr;
+	NetworkedUser* secondNetworkUser = nullptr;
 
-    if (argc > 1)
+    if (argc > 1) // Run the server
     {
-        // Run the server
-
         isServer = true;
-
-        //NetworkedServer* server = new NetworkedServer(localAddress, portNumber);
 
 		networkedUser = new NetworkedServer(localAddress, portNumber);
 
         networkedUser->RunUser();
     }
-    else
+    else      // Run the client
     {
-        // Run the client
-
         isServer = false;
 
-        //NetworkedClient* client = new NetworkedClient(localAddress, portNumber);
 		networkedUser = new NetworkedClient(localAddress, portNumber);
         networkedUser->RunUser();
 
         networkedUser->SetSocket2(networkedUser->GetSocket());
 
-        testNetwork = new NetworkedServer(localAddress, 9000);
+        // Creates the server for the client
+        secondNetworkUser = new NetworkedServer(localAddress, secondPortNumber);
 
-        testNetwork->RunUser();
+        secondNetworkUser->RunUser();
     }
 
     InitWindow(WIDTH, HEIGHT, "ONLINE CONNECT 4");
@@ -107,47 +77,22 @@ int main(int argc, char* argv[])
     {
         while (isPlaying)
         {
-            Socket connection = networkedUser->GetSocket()->Accept();
+            Socket connection = networkedUser->GetSocket()->Accept(); // Waits here until it gets a connection
 
             networkedUser->SetSocket2(&connection);
 
-            connection.SetNonBlockingMode(true);
+            connection.SetNonBlockingMode(true); // Once the server gets a connection, it turns on non blocking mode
 
             hasConnection = true;
 
-            testNetwork = new NetworkedClient(localAddress, 9000);
-            testNetwork->RunUser();
+            secondNetworkUser = new NetworkedClient(localAddress, secondPortNumber);
+            secondNetworkUser->RunUser();
 
-            testNetwork->SetSocket2(testNetwork->GetSocket());
+            secondNetworkUser->SetSocket2(secondNetworkUser->GetSocket());
 
             while (!WindowShouldClose() || hasConnection)
             {
-                RunGame(board, currentPlayer, networkedUser, testNetwork, isServer);
-                   
-                    //networkedUser->RunNetworkedUpdate();
-                    //Run Server update
-                    try
-                    {
-                        if (connection._has_socket)
-                        {
-                            std::string message = recieve(connection, 4096);
-
-                            connection.Send(message.data(), message.size());
-                        }
-                        else
-                        {
-                            throw std::runtime_error("Broken");
-                        }
-                    }
-                    catch (connectionDisconnect& e)
-                    {
-                        hasConnection = false;
-                        std::cout << "The connection was closed" << std::endl;
-                    }
-                    catch (connectionTimeout& e)
-                    {
-                        hasConnection = false;
-                    }
+                RunGame(board, currentPlayer, networkedUser, secondNetworkUser, isServer);
 
                 // Undefined destruction order literally because it's easier
                 erase_if(world, [](std::unique_ptr<GameObject>& it) {return destroy_set.contains(it.get());});
@@ -160,32 +105,18 @@ int main(int argc, char* argv[])
     {
         while (isPlaying)
         {
-            Socket connection = testNetwork->GetSocket()->Accept();
+            Socket connection = secondNetworkUser->GetSocket()->Accept();
 
-            testNetwork->SetSocket2(&connection);
+            secondNetworkUser->SetSocket2(&connection);
 
             connection.SetNonBlockingMode(true);
 
             while (!WindowShouldClose())
             {
-                RunGame(board, currentPlayer, testNetwork, networkedUser, isServer);
-
-                // Run server and client updates:
-                
-                // Run Client update
-
-                //networkedUser->RunNetworkedUpdate();
-
-
-
-                std::stringstream msg;
-
-                //stream_write(msg, )
-
-                //clientUser.SendMessage(msg);
+                RunGame(board, currentPlayer, secondNetworkUser, networkedUser, isServer);
 
                 // Undefined destruction order literally because it's easier
-                //erase_if(world, [](std::unique_ptr<GameObject>& it) {return destroy_set.contains(it.get());});
+                erase_if(world, [](std::unique_ptr<GameObject>& it) {return destroy_set.contains(it.get()); });
                 destroy_set.clear();
                 spawn_queue.clear();
             }
@@ -197,7 +128,14 @@ int main(int argc, char* argv[])
         }
     }    
 
+    // Clear heap memory
     if (networkedUser != NULL)
+    {
+        delete networkedUser;
+        networkedUser = nullptr;
+    }
+
+    if (secondNetworkUser != NULL)
     {
         delete networkedUser;
         networkedUser = nullptr;

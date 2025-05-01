@@ -8,6 +8,7 @@
 #include <sstream>
 
 const int portNumber = 10346;
+const int secondPortNumber = 9000;
 const char* const localAddress = "127.0.0.1";
 
 #pragma region SocketErrors
