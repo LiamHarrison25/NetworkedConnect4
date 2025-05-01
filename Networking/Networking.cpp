@@ -1,20 +1,11 @@
 #include "Networking.h"
 
-//Metworked user:
-
-void NetworkedUser::RunNetworkedUpdate()
-{
-
-}
-
-
 //Networked server
+#pragma region NetworkedServer
 
 void NetworkedServer::run_server()
 {
 	socket = new Socket(Socket::Family::INET, Socket::Type::STREAM);
-
-	//socket->Create();
 
 	socket->Bind(Address(hostName, portNumber));
 
@@ -26,8 +17,6 @@ void NetworkedServer::SendMessage(std::stringstream& stream, Socket* socketTarge
 	std::string message = stream.str();
 
 	int bytesSent = socketTarget->Send(message.data(), message.size());
-
-	//std::string buffer(4096, '\0');
 
 }
 
@@ -50,27 +39,20 @@ std::string NetworkedServer::RecieveMessage(Socket& sock, size_t size)
 	return buffer;
 }
 
-void NetworkedServer::CheckForInput()
-{
-
-}
-
-void NetworkedServer::RunNetworkedUpdate()
-{
-	CheckForInput();
-}
-
 void NetworkedServer::RunUser()
 {
 	run_server();
 }
 
+#pragma endregion
+
 //Networked Client
+
+#pragma region NetworkedClient
 
 void NetworkedClient::run_client()
 {
 	socket = new Socket(Socket::Family::INET, Socket::Type::STREAM);
-	//socket->Create(Socket::Family::INET, Socket::Type::STREAM);
 
 	try
 	{
@@ -80,7 +62,7 @@ void NetworkedClient::run_client()
 	catch (std::runtime_error)
 	{
 		std::cout << "Could not make a connection" << std::endl;
-	}	
+	}
 }
 
 void NetworkedClient::SendMessage(std::stringstream& stream, Socket* socketTarget)
@@ -110,13 +92,9 @@ std::string NetworkedClient::RecieveMessage(Socket& sock, size_t size)
 	return buffer;
 }
 
-void NetworkedClient::RunNetworkedUpdate()
-{
-	//Send Message
-}
-
 void NetworkedClient::RunUser()
 {
 	run_client();
 }
 
+#pragma endregion

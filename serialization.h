@@ -1,6 +1,5 @@
 //
 // Created by Scott Barrett on 4/14/25.
-// Edited by Liam Harrison
 //
 
 #ifndef SERIALIZATION_H

@@ -10,6 +10,8 @@
 const int portNumber = 10346;
 const char* const localAddress = "127.0.0.1";
 
+#pragma region SocketErrors
+
 class connectionDisconnect : public std::runtime_error
 {
 public:
@@ -22,6 +24,11 @@ public:
 	connectionTimeout() : std::runtime_error("connection time out") {}
 };
 
+#pragma endregion
+
+/// <summary>
+/// This class is used to provide polymorphism for the different types of connections. (servers and clients)
+/// </summary>
 class NetworkedUser
 {
 public:
@@ -54,10 +61,8 @@ public:
 		socket2 = sock;
 	}
 
-	virtual void RunUser() = 0;
-
-	virtual void RunNetworkedUpdate();
-
+	// Pure virtual functions
+	virtual void RunUser() = 0; // Used for polymorphism for the different run functions on the children
 	virtual void SendMessage(std::stringstream& stream, Socket* socketTarget) = 0;
 	virtual std::string RecieveMessage(Socket& sock, size_t size = 4096) = 0;
 
@@ -65,49 +70,42 @@ protected:
 
 	const char* hostName;
 	int portNumber;
-	Socket* socket;
-	Socket* socket2;
-
+	Socket* socket; 
+	Socket* socket2; // Socket 2 is used to store whatever socket the user is attempting to send or recieve data
 };
 
+/// <summary>
+/// The networked server is used to create a server socket
+/// </summary>
 class NetworkedServer : public NetworkedUser
 {
 public:
 
-	NetworkedServer(const char* host, int port) : NetworkedUser(host, port) { hasConnection = false; }
-
-	void RunNetworkedUpdate();
+	NetworkedServer(const char* host, int port) : NetworkedUser(host, port) { }
 
 	void run_server();
 
-	void CheckForInput();
-
 	void RunUser();
-
-private:
-
-	Socket connection;
-	bool hasConnection;
 
 	void SendMessage(std::stringstream& stream, Socket* socketTarget);
 	std::string RecieveMessage(Socket& sock, size_t size = 4096);
+
 };
 
+/// <summary>
+/// The networked client is used to create a client socket
+/// </summary>
 class NetworkedClient : public NetworkedUser
 {
 public:
 
 	NetworkedClient(const char* host, int port) : NetworkedUser(host, port) {}
 
-	void RunNetworkedUpdate();
-
 	void RunUser();
 
 	void run_client();
+
 	void SendMessage(std::stringstream& stream, Socket* socketTarget);
 	std::string RecieveMessage(Socket& sock, size_t size = 4096);
-
-private:
-
 
 };
