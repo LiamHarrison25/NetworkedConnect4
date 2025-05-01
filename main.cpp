@@ -24,7 +24,7 @@ bool gameOver = false;
 
 //Forward declarations:
 
-void RunGame(Board& board, int& currentPlayer, NetworkedUser* user);
+void RunGame(Board& board, int& currentPlayer, NetworkedUser* user, bool isServer);
 
 std::string recieve(Socket& sock, size_t size)
 {
@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
 
         isServer = true;
 
-        NetworkedServer* server = new NetworkedServer(localAddress, portNumber);
+        //NetworkedServer* server = new NetworkedServer(localAddress, portNumber);
 
 		networkedUser = new NetworkedServer(localAddress, portNumber);
 
@@ -84,16 +84,15 @@ int main(int argc, char* argv[])
 
         //NetworkedClient* client = new NetworkedClient(localAddress, portNumber);
 		networkedUser = new NetworkedClient(localAddress, portNumber);
+        networkedUser->RunUser();
 		networkedUser->SetSocket2(networkedUser->GetSocket());
 
-        networkedUser->RunUser();
     }
 
     InitWindow(WIDTH, HEIGHT, "ONLINE CONNECT 4");
     SetTargetFPS(60);
 
     Board board;
-    int currentPlayer = 1;
     bool hasConnection = false;
 
     bool isPlaying = true;
@@ -112,7 +111,8 @@ int main(int argc, char* argv[])
 
             while (!WindowShouldClose() || hasConnection)
             {
-                RunGame(board, currentPlayer, networkedUser);
+                int currentPlayer = 1;
+                RunGame(board, currentPlayer, networkedUser, isServer);
                    
                     //networkedUser->RunNetworkedUpdate();
                     //Run Server update
@@ -154,7 +154,8 @@ int main(int argc, char* argv[])
 
             while (!WindowShouldClose())
             {
-                RunGame(board, currentPlayer, networkedUser);
+                int currentPlayer = 2;
+                RunGame(board, currentPlayer, networkedUser, isServer);
 
                 // Run server and client updates:
                 
@@ -192,12 +193,14 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-void RunGame(Board& board, int& currentPlayer, NetworkedUser* user)
+void RunGame(Board& board, int& currentPlayer, NetworkedUser* user, bool isServer)
 {
     std::string gameMessage = "";
     int mouseX = GetMouseX();
 
-    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+    int playerID = isServer ? 1 : 2;
+
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && currentPlayer == playerID)
     {
         int columnClicked = (mouseX - OFFSET_X) / CELL_W;
         if (columnClicked >= 0 && columnClicked < COLS && !gameOver)
@@ -225,8 +228,8 @@ void RunGame(Board& board, int& currentPlayer, NetworkedUser* user)
 
         Piece piece;
 		piece.Deserialize(stream);
-        board.AddPiece(piece);
         board.PlayerMove(piece);
+        board.AddPiece(piece);
     }
 	catch (connectionDisconnect& e)
 	{
