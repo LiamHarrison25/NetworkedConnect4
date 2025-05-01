@@ -24,7 +24,7 @@ bool gameOver = false;
 
 //Forward declarations:
 
-void RunGame(Board& board, int& currentPlayer);
+void RunGame(Board& board, int& currentPlayer, NetworkedUser* user);
 
 std::string recieve(Socket& sock, size_t size)
 {
@@ -60,8 +60,9 @@ int main(int argc, char* argv[])
 
     bool isServer = false;
 
-    NetworkedServer serverUser(localAddress, portNumber);
-    NetworkedClient clientUser(localAddress, portNumber);
+    //NetworkedServer serverUser(localAddress, portNumber);
+    //NetworkedClient clientUser(localAddress, portNumber);
+	NetworkedUser* networkedUser = nullptr;
 
     if (argc > 1)
     {
@@ -71,7 +72,9 @@ int main(int argc, char* argv[])
 
         NetworkedServer* server = new NetworkedServer(localAddress, portNumber);
 
-        serverUser.run_server();
+		networkedUser = new NetworkedServer(localAddress, portNumber);
+
+        networkedUser->RunUser();
     }
     else
     {
@@ -79,9 +82,11 @@ int main(int argc, char* argv[])
 
         isServer = false;
 
-        NetworkedClient* client = new NetworkedClient(localAddress, portNumber);
+        //NetworkedClient* client = new NetworkedClient(localAddress, portNumber);
+		networkedUser = new NetworkedClient(localAddress, portNumber);
+		networkedUser->SetSocket2(networkedUser->GetSocket());
 
-        clientUser.run_client();
+        networkedUser->RunUser();
     }
 
     InitWindow(WIDTH, HEIGHT, "ONLINE CONNECT 4");
@@ -97,7 +102,9 @@ int main(int argc, char* argv[])
     {
         while (isPlaying)
         {
-            Socket connection = serverUser.GetSocket()->Accept();
+            Socket connection = networkedUser->GetSocket()->Accept();
+
+            networkedUser->SetSocket2(&connection);
 
             connection.SetNonBlockingMode(true);
 
@@ -105,7 +112,7 @@ int main(int argc, char* argv[])
 
             while (!WindowShouldClose() || hasConnection)
             {
-                RunGame(board, currentPlayer);
+                RunGame(board, currentPlayer, networkedUser);
                    
                     //networkedUser->RunNetworkedUpdate();
                     //Run Server update
@@ -147,7 +154,7 @@ int main(int argc, char* argv[])
 
             while (!WindowShouldClose())
             {
-                RunGame(board, currentPlayer);
+                RunGame(board, currentPlayer, networkedUser);
 
                 // Run server and client updates:
                 
@@ -155,9 +162,13 @@ int main(int argc, char* argv[])
 
                 //networkedUser->RunNetworkedUpdate();
 
-                std::stringstream msg("Hello World!");
 
-                clientUser.SendMessage(msg);
+
+                std::stringstream msg;
+
+                //stream_write(msg, )
+
+                //clientUser.SendMessage(msg);
 
                 // Undefined destruction order literally because it's easier
                 //erase_if(world, [](std::unique_ptr<GameObject>& it) {return destroy_set.contains(it.get());});
@@ -172,16 +183,16 @@ int main(int argc, char* argv[])
         }
     }    
 
-    /*if (networkedUser != NULL)
+    if (networkedUser != NULL)
     {
         delete networkedUser;
         networkedUser = nullptr;
-    }*/
+    }
    
     return 0;
 }
 
-void RunGame(Board& board, int& currentPlayer)
+void RunGame(Board& board, int& currentPlayer, NetworkedUser* user)
 {
     std::string gameMessage = "";
     int mouseX = GetMouseX();
@@ -196,10 +207,37 @@ void RunGame(Board& board, int& currentPlayer)
             if (board.PlayerMove(piece))
             {
                 board.AddPiece(piece);
+                std::stringstream stream;
+                piece.Serialize(stream);
+				user->SendMessage(stream, user->GetSocket2());
                 currentPlayer = (currentPlayer == 1) ? 2 : 1;
             }
         }
     }
+
+    // Recieve input
+
+    try
+    {
+        std::string output = user->RecieveMessage(*user->GetSocket2(), 4096);
+
+		std::stringstream stream(output);
+
+        Piece piece;
+		piece.Deserialize(stream);
+        board.AddPiece(piece);
+        board.PlayerMove(piece);
+    }
+	catch (connectionDisconnect& e)
+	{
+		std::cout << "The connection was closed";
+	}
+	catch (connectionTimeout& e)
+	{
+		std::cout << "The connection timed out";
+	}
+
+
 
     {
         BeginDrawing();
