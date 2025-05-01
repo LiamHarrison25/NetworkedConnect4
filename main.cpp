@@ -151,6 +151,9 @@ void RunGame(Board& board, int& currentPlayer, NetworkedUser* server, NetworkedU
     int mouseX = GetMouseX(); // Int that gets the mouse's current X position
 
     int playerID = isServer ? 1 : 2; // Determines current player's turn based on if they're "Hosting"
+    std::stringstream id("Player: ");
+    std::string user = std::to_string(playerID);
+    std::string userText = id.str() + user;
 
     // Checks to see if the player clicked the left mouse button and if it's their turn
     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && currentPlayer == playerID)
@@ -211,6 +214,7 @@ void RunGame(Board& board, int& currentPlayer, NetworkedUser* server, NetworkedU
 
         ClearBackground(DARKGREEN); // Background
         DrawFPS(20, 20);
+        DrawText(userText.c_str(), 20, 5, 15, BLACK);
 
         DrawRectangle(125, 25, 700, 500, DARKBLUE); // Board frame
 
