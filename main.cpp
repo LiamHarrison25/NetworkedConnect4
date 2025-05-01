@@ -98,6 +98,7 @@ int main(int argc, char* argv[])
     SetTargetFPS(60);
 
     Board board;
+    int currentPlayer = 1;
     bool hasConnection = false;
 
     bool isPlaying = true;
@@ -121,7 +122,6 @@ int main(int argc, char* argv[])
 
             while (!WindowShouldClose() || hasConnection)
             {
-                int currentPlayer = 1;
                 RunGame(board, currentPlayer, networkedUser, testNetwork, isServer);
                    
                     //networkedUser->RunNetworkedUpdate();
@@ -168,7 +168,6 @@ int main(int argc, char* argv[])
 
             while (!WindowShouldClose())
             {
-                int currentPlayer = 2;
                 RunGame(board, currentPlayer, testNetwork, networkedUser, isServer);
 
                 // Run server and client updates:
@@ -237,6 +236,7 @@ void RunGame(Board& board, int& currentPlayer, NetworkedUser* server, NetworkedU
     try
     {
         std::string output = client->RecieveMessage(*client->GetSocket2(), 4096);
+        currentPlayer = (currentPlayer == 1) ? 2 : 1;
 
         std::stringstream stream(output);
 
