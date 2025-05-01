@@ -12,7 +12,9 @@
 	or
 	Run the game from the IDE normally
 
-## TIPS:
+## Controls:
 
-Press the r key to reset the game
+Press the r key to reset the game when the game is over.
+
+Use left mouse button to place pieces. 
 
