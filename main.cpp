@@ -240,6 +240,15 @@ void RunGame(Board& board, int& currentPlayer, NetworkedUser* server, NetworkedU
 
         std::stringstream stream(output);
 
+        if (stream.str().length() == 1)
+        {
+            gameOver = false;
+            board.ResetGame();
+            currentPlayer = 1;
+            gameMessage = "";
+            return;
+        }
+
         Piece piece;
         piece.Deserialize(stream);
         board.AddPiece(piece);
@@ -325,6 +334,9 @@ void RunGame(Board& board, int& currentPlayer, NetworkedUser* server, NetworkedU
             board.ResetGame();
             currentPlayer = 1;
             gameMessage = "";
+
+            std::stringstream stream("0");
+            server->SendMessage(stream, server->GetSocket2());
         }
     }
 }
