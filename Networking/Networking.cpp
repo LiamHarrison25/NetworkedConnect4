@@ -12,11 +12,13 @@ void NetworkedUser::RunNetworkedUpdate()
 
 void NetworkedServer::run_server()
 {
-	socket.Create(Socket::Family::INET, Socket::Type::STREAM);
+	socket = new Socket(Socket::Family::INET, Socket::Type::STREAM);
 
-	socket.Bind(Address(hostName, portNumber));
+	//socket->Create();
 
-	socket.Listen();
+	socket->Bind(Address(hostName, portNumber));
+
+	socket->Listen();
 }
 
 void NetworkedServer::SendMessage(std::stringstream& stream, Socket* socketTarget)
@@ -25,7 +27,7 @@ void NetworkedServer::SendMessage(std::stringstream& stream, Socket* socketTarge
 
 	int bytesSent = socketTarget->Send(message.data(), message.size());
 
-	std::string buffer(4096, '\0');
+	//std::string buffer(4096, '\0');
 
 }
 
@@ -67,12 +69,13 @@ void NetworkedServer::RunUser()
 
 void NetworkedClient::run_client()
 {
-	socket.Create(Socket::Family::INET, Socket::Type::STREAM);
+	socket = new Socket(Socket::Family::INET, Socket::Type::STREAM);
+	//socket->Create(Socket::Family::INET, Socket::Type::STREAM);
 
 	try
 	{
-		socket.Connect(Address(hostName, portNumber));
-		socket.SetNonBlockingMode(true);
+		socket->Connect(Address(hostName, portNumber));
+		socket->SetNonBlockingMode(true);
 	}
 	catch (std::runtime_error)
 	{

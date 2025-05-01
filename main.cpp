@@ -85,8 +85,8 @@ int main(int argc, char* argv[])
         //NetworkedClient* client = new NetworkedClient(localAddress, portNumber);
 		networkedUser = new NetworkedClient(localAddress, portNumber);
         networkedUser->RunUser();
-		networkedUser->SetSocket2(networkedUser->GetSocket());
 
+        networkedUser->SetSocket2(networkedUser->GetSocket());
     }
 
     InitWindow(WIDTH, HEIGHT, "ONLINE CONNECT 4");
@@ -197,6 +197,7 @@ void RunGame(Board& board, int& currentPlayer, NetworkedUser* user, bool isServe
 {
     std::string gameMessage = "";
     int mouseX = GetMouseX();
+    bool madeMove = false;
 
     int playerID = isServer ? 1 : 2;
 
@@ -214,33 +215,35 @@ void RunGame(Board& board, int& currentPlayer, NetworkedUser* user, bool isServe
                 piece.Serialize(stream);
 				user->SendMessage(stream, user->GetSocket2());
                 currentPlayer = (currentPlayer == 1) ? 2 : 1;
+                madeMove = true;
             }
         }
     }
 
     // Recieve input
 
-    try
+    if (!madeMove)
     {
-        std::string output = user->RecieveMessage(*user->GetSocket2(), 4096);
+        try
+        {
+            std::string output = user->RecieveMessage(*user->GetSocket2(), 4096);
 
-		std::stringstream stream(output);
+            std::stringstream stream(output);
 
-        Piece piece;
-		piece.Deserialize(stream);
-        board.PlayerMove(piece);
-        board.AddPiece(piece);
+            Piece piece;
+            piece.Deserialize(stream);
+            board.AddPiece(piece);
+            board.PlayerMove(piece);
+        }
+        catch (connectionDisconnect& e)
+        {
+            std::cout << "The connection was closed";
+        }
+        catch (connectionTimeout& e)
+        {
+            std::cout << "The connection timed out";
+        }
     }
-	catch (connectionDisconnect& e)
-	{
-		std::cout << "The connection was closed";
-	}
-	catch (connectionTimeout& e)
-	{
-		std::cout << "The connection timed out";
-	}
-
-
 
     {
         BeginDrawing();

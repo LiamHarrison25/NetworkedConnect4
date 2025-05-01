@@ -32,19 +32,26 @@ public:
 		portNumber = port;
 	}
 
+	~NetworkedUser()
+	{
+		//delete socket;
+		socket = nullptr;
+		socket2 = nullptr;
+	}
+
 	Socket* GetSocket()
 	{
-		return &socket;
+		return socket;
 	}
 
 	Socket* GetSocket2()
 	{
-		return soecket2;
+		return socket2;
 	}
 
 	void SetSocket2(Socket* sock)
 	{
-		soecket2 = sock;
+		socket2 = sock;
 	}
 
 	virtual void RunUser() = 0;
@@ -58,8 +65,8 @@ protected:
 
 	const char* hostName;
 	int portNumber;
-	Socket socket;
-	Socket* soecket2;
+	Socket* socket;
+	Socket* socket2;
 
 };
 
