@@ -206,27 +206,30 @@ int main(int argc, char* argv[])
     return 0;
 }
 
+// Renders the game
 void RunGame(Board& board, int& currentPlayer, NetworkedUser* server, NetworkedUser* client, bool isServer)
 {
-    std::string gameMessage = "";
-    int mouseX = GetMouseX();
+    std::string gameMessage = ""; // String that displays Win, Lose, or Draw end state
+    int mouseX = GetMouseX(); // Int that gets the mouse's current X position
 
-    int playerID = isServer ? 1 : 2;
+    int playerID = isServer ? 1 : 2; // Determines current player's turn based on if they're "Hosting"
 
+    // Checks to see if the player clicked the left mouse button and if it's their turn
     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && currentPlayer == playerID)
     {
+        // Checks to see what column the player is hovering over
         int columnClicked = (mouseX - OFFSET_X) / CELL_W;
         if (columnClicked >= 0 && columnClicked < COLS && !gameOver)
         {
             Piece piece;
-            piece.PlacePiece(columnClicked, currentPlayer);
-            if (board.PlayerMove(piece))
+            piece.PlacePiece(columnClicked, currentPlayer); // Sets the piece's column and player possesion
+            if (board.PlayerMove(piece)) // Places piece on local board if valid
             {
-                board.AddPiece(piece);
+                board.AddPiece(piece); // Adds piece to local player's pieces list
                 std::stringstream stream;
                 piece.Serialize(stream);
-				server->SendMessage(stream, server->GetSocket2());
-                currentPlayer = (currentPlayer == 1) ? 2 : 1;
+				server->SendMessage(stream, server->GetSocket2()); // Sends piece to the opponent
+                currentPlayer = (currentPlayer == 1) ? 2 : 1; // Swaps currentPlayer turn
             }
         }
     }
@@ -235,12 +238,12 @@ void RunGame(Board& board, int& currentPlayer, NetworkedUser* server, NetworkedU
 
     try
     {
-        std::string output = client->RecieveMessage(*client->GetSocket2(), 4096);
-        currentPlayer = (currentPlayer == 1) ? 2 : 1;
+        std::string output = client->RecieveMessage(*client->GetSocket2(), 4096); // Checks to see if opponent sent a message
+        currentPlayer = (currentPlayer == 1) ? 2 : 1; // Swaps turns if message was sent
 
         std::stringstream stream(output);
 
-        if (stream.str().length() == 1)
+        if (stream.str().length() == 1) // Checks to see if the message was to reset the game
         {
             gameOver = false;
             board.ResetGame();
@@ -251,8 +254,8 @@ void RunGame(Board& board, int& currentPlayer, NetworkedUser* server, NetworkedU
 
         Piece piece;
         piece.Deserialize(stream);
-        board.AddPiece(piece);
-        board.PlayerMove(piece);
+        board.AddPiece(piece); // Places opponent's piece to the local pieces list
+        board.PlayerMove(piece); // Places opponent's piece on the local board
     }
     catch (connectionDisconnect& e)
     {
@@ -268,11 +271,12 @@ void RunGame(Board& board, int& currentPlayer, NetworkedUser* server, NetworkedU
         defer _endDrawing(EndDrawing);
 
 
-        ClearBackground(DARKGREEN);
+        ClearBackground(DARKGREEN); // Background
         DrawFPS(20, 20);
 
-        DrawRectangle(125, 25, 700, 500, DARKBLUE);
+        DrawRectangle(125, 25, 700, 500, DARKBLUE); // Board frame
 
+        // Visually sets circles to demonstrate the pieces in play
         for (int row = 0; row < ROWS; row++)
         {
             for (int col = 0; col < COLS; col++)
@@ -294,6 +298,7 @@ void RunGame(Board& board, int& currentPlayer, NetworkedUser* server, NetworkedU
             }
         }
 
+        // Checks to see if a player has Won or Drawn
         switch (board.CheckWin())
         {
         case 1:
@@ -310,12 +315,14 @@ void RunGame(Board& board, int& currentPlayer, NetworkedUser* server, NetworkedU
             break;
         }
 
+        // Displays game message string when game reaches end state
         int textWidth = MeasureText(gameMessage.c_str(), 100);
         if (!gameMessage.empty())
         {
             DrawText(gameMessage.c_str(), (WIDTH - textWidth) / 2, 225, 100, BLACK);
         }
 
+        // Highlights row that player is hovering over
         int hoverCol = (mouseX - OFFSET_X) / CELL_W;
         if (hoverCol >= 0 && hoverCol < COLS && !gameOver)
         {
@@ -328,6 +335,7 @@ void RunGame(Board& board, int& currentPlayer, NetworkedUser* server, NetworkedU
             }
         }
 
+        // Resets game when the game is in an end state
         if (gameOver && IsKeyDown(KEY_R))
         {
             gameOver = false;
@@ -336,7 +344,7 @@ void RunGame(Board& board, int& currentPlayer, NetworkedUser* server, NetworkedU
             gameMessage = "";
 
             std::stringstream stream("0");
-            server->SendMessage(stream, server->GetSocket2());
+            server->SendMessage(stream, server->GetSocket2()); // Sends reset over to opponent
         }
     }
 }

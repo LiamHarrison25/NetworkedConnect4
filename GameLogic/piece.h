@@ -9,8 +9,8 @@ public:
 	~Piece();
 
 	void PlacePiece(int col, int player);
-	const int GetColumn() { return piece.first; }
-	const int GetColor() { return piece.second; }
+	const int GetColumn() { return piece.first; } // Returns the column
+	const int GetColor() { return piece.second; } // Returns the player "color"
 
 	void Deserialize(std::istream& is);
 	void Serialize(std::ostream& os);

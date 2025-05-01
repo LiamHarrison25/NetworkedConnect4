@@ -11,10 +11,10 @@ public:
 
 	int CheckWin();
 	bool PlayerMove(Piece& piece);
-	void AddPiece(Piece& piece) { pieces.push_back(piece); }
+	void AddPiece(Piece& piece) { pieces.push_back(piece); } // Adds a piece to the pieces array
 	int GetNextOpenRow(int col) const;
 	void SetBoard();
-	const std::vector<std::vector<int>>& GetBoard() { return board; }
+	const std::vector<std::vector<int>>& GetBoard() { return board; } // Returns the board's current state
 	void ResetGame();
 
 private:

@@ -1,5 +1,6 @@
 #include "board.h"
 
+// Sets the base board
 Board::Board()
 {
 	board = std::vector<std::vector<int>>(7, std::vector<int>(6, 0));
@@ -10,12 +11,20 @@ Board::~Board()
 
 }
 
+/// <summary>
+/// Clears the board back to the base while
+/// clear all pieces from the pieces array.
+/// </summary>
 void Board::ResetGame()
 {
 	board = std::vector<std::vector<int>>(7, std::vector<int>(6, 0));
 	pieces.clear();
 }
 
+/// <summary>
+/// Refreshes the board to show the accurate
+/// state of the board with the pieces it has.
+/// </summary>
 void Board::SetBoard()
 {
 	board = std::vector<std::vector<int>>(7, std::vector<int>(6, 0));
@@ -26,6 +35,13 @@ void Board::SetBoard()
 	}
 }
 
+/// <summary>
+/// Places an int based on the the piece's column
+/// number (first pair), and sets the player number
+/// (secod pair), in the corresponding column.
+/// </summary>
+/// <param name="piece"></param>
+/// <returns></returns>
 bool Board::PlayerMove(Piece& piece)
 {
 	for (int i = ROW - 1; i >= 0; i--)
@@ -44,6 +60,13 @@ bool Board::PlayerMove(Piece& piece)
 	return false;
 }
 
+/// <summary>
+/// Checks to see if the current row is open
+/// for piece placement or not. If it isn't,
+/// then it returns -1.
+/// </summary>
+/// <param name="col"></param>
+/// <returns></returns>
 int Board::GetNextOpenRow(int col) const
 {
 	for (int row = ROW - 1; row >= 0; row--)
