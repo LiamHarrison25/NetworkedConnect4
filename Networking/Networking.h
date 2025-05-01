@@ -37,13 +37,29 @@ public:
 		return &socket;
 	}
 
+	Socket* GetSocket2()
+	{
+		return soecket2;
+	}
+
+	void SetSocket2(Socket* sock)
+	{
+		soecket2 = sock;
+	}
+
+	virtual void RunUser() = 0;
+
 	virtual void RunNetworkedUpdate();
+
+	virtual void SendMessage(std::stringstream& stream, Socket* socketTarget) = 0;
+	virtual std::string RecieveMessage(Socket& sock, size_t size = 4096) = 0;
 
 protected:
 
 	const char* hostName;
 	int portNumber;
 	Socket socket;
+	Socket* soecket2;
 
 };
 
@@ -59,12 +75,15 @@ public:
 
 	void CheckForInput();
 
+	void RunUser();
+
 private:
 
 	Socket connection;
 	bool hasConnection;
 
-	std::string recieve(Socket& sock, size_t size = 4096);
+	void SendMessage(std::stringstream& stream, Socket* socketTarget);
+	std::string RecieveMessage(Socket& sock, size_t size = 4096);
 };
 
 class NetworkedClient : public NetworkedUser
@@ -75,8 +94,11 @@ public:
 
 	void RunNetworkedUpdate();
 
+	void RunUser();
+
 	void run_client();
-	std::string SendMessage(std::stringstream& stream);
+	void SendMessage(std::stringstream& stream, Socket* socketTarget);
+	std::string RecieveMessage(Socket& sock, size_t size = 4096);
 
 private:
 

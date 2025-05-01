@@ -19,7 +19,17 @@ void NetworkedServer::run_server()
 	socket.Listen();
 }
 
-std::string NetworkedServer::recieve(Socket& sock, size_t size)
+void NetworkedServer::SendMessage(std::stringstream& stream, Socket* socketTarget)
+{
+	std::string message = stream.str();
+
+	int bytesSent = socketTarget->Send(message.data(), message.size());
+
+	std::string buffer(4096, '\0');
+
+}
+
+std::string NetworkedServer::RecieveMessage(Socket& sock, size_t size)
 {
 	std::string buffer(size, '\0');
 
@@ -40,46 +50,17 @@ std::string NetworkedServer::recieve(Socket& sock, size_t size)
 
 void NetworkedServer::CheckForInput()
 {
-	//if (!hasConnection)
-	//{
-	//	try
-	//	{
-	//		Socket connectionTest = socket.Accept();
-	//		connection = connectionTest; //= socket.Accept();
-	//	}
-	//	catch (std::runtime_error)
-	//	{
-	//		std::cout << "Could not connect" << std::endl;
-	//	}
 
-	//	std::cout << "Connection established" << std::endl;
-
-	//	hasConnection = true;
-	//}
-
-	//if (hasConnection)
-	//{
-	//	try
-	//	{
-	//		std::string message = recieve(connection);
-
-	//		connection.Send(message.data(), message.size());
-	//	}
-	//	catch (connectionDisconnect& e)
-	//	{
-	//		hasConnection = false;
-	//		std::cout << "The connection was closed" << std::endl;
-	//	}
-	//	catch (connectionTimeout& e)
-	//	{
-	//		hasConnection = false;
-	//	}
-	//}	
 }
 
 void NetworkedServer::RunNetworkedUpdate()
 {
 	CheckForInput();
+}
+
+void NetworkedServer::RunUser()
+{
+	run_server();
 }
 
 //Networked Client
@@ -99,24 +80,30 @@ void NetworkedClient::run_client()
 	}	
 }
 
-std::string NetworkedClient::SendMessage(std::stringstream& stream)
+void NetworkedClient::SendMessage(std::stringstream& stream, Socket* socketTarget)
 {
 	std::string message = stream.str();
 
-	int bytesSent = socket.Send(message.data(), message.size());
+	int bytesSent = socketTarget->Send(message.data(), message.size());
+}
 
-	std::string buffer(4096, '\0');
 
-	int bytesRecieved = socket.Recv(buffer.data(), buffer.size());
+std::string NetworkedClient::RecieveMessage(Socket& sock, size_t size)
+{
+	std::string buffer(size, '\0');
 
-	if (bytesRecieved > 0)
+	int numBytesRecieved = sock.Recv(buffer.data(), buffer.size());
+
+	if (numBytesRecieved < 0)
 	{
-		buffer[bytesRecieved] = '\0';
-		std::cout << std::endl << buffer << std::endl;
-
-		buffer.resize(bytesRecieved);
+		throw connectionTimeout();
+	}
+	else if (numBytesRecieved == 0)
+	{
+		throw connectionDisconnect();
 	}
 
+	buffer.resize(numBytesRecieved);
 	return buffer;
 }
 
@@ -125,4 +112,8 @@ void NetworkedClient::RunNetworkedUpdate()
 	//Send Message
 }
 
+void NetworkedClient::RunUser()
+{
+	run_client();
+}
 
